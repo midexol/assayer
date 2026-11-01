@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# Secrets: keys live in GitHub Secrets / Vercel env vars, never here
+.env
+.env.*
+!.env.example
+
+# Local collector output (real snapshots are exported to data/snapshot/)
+data/local/
+out/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
