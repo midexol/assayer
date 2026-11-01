@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from oneprice.registry import RegistryError, load, tickers
+from assayer.registry import RegistryError, load, tickers
 
 HEADER = "ticker,issuer,symbol,chain,address,status,source\n"
 

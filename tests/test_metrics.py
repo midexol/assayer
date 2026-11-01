@@ -1,6 +1,6 @@
 import pytest
 
-from oneprice.metrics import PriceError, VenueQuote, per_share, premium, spread
+from assayer.metrics import PriceError, VenueQuote, per_share, premium, spread
 
 
 def test_premium_is_zero_at_reference():

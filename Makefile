@@ -8,11 +8,11 @@ test:
 
 # Runs offline: no keys, no database. Reads data/snapshot/.
 demo:
-	python -m oneprice.demo
+	python -m assayer.demo
 
 # Needs FINNHUB_KEY (and DATABASE_URL to write to Postgres).
 collect:
-	python -m oneprice.collect.reference
+	python -m assayer.collect.reference
 
 # Thesis charts and numbers. Built from day 7 onward.
 report:

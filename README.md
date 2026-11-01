@@ -1,11 +1,11 @@
-# OnePrice
+# Assayer
 
-OnePrice measures how far tokenized US stocks (Ondo `…on` tokens and xStocks `…x` tokens) drift from the real Nasdaq price across Solana, Ethereum, BNB Chain and centralized exchanges, and what that drift costs traders. Built at NEAR HACKATHON (Nov 1 to 14, 2026).
+Assayer measures how far tokenized US stocks (Ondo `…on` tokens and xStocks `…x` tokens) drift from the real Nasdaq price across Solana, Ethereum, BNB Chain and centralized exchanges, and what that drift costs traders. Built at NEAR HACKATHON (Nov 1 to 14, 2026).
 
 ## Try it
 
 ```sh
-git clone <this repo> && cd oneprice
+git clone <this repo> && cd assayer
 make install
 make test    # unit tests for the pricing math, registry and collector parsing
 make demo    # runs offline, no keys: registry coverage and the latest snapshot
@@ -19,15 +19,15 @@ This section is updated as work lands. Anything not marked built is not claimed.
 
 | Part | State | Where |
 | --- | --- | --- |
-| Pricing math (premium, cross-venue spread, dividend multiplier) | built, tested | [`oneprice/metrics.py`](oneprice/metrics.py), [`tests/test_metrics.py`](tests/test_metrics.py) |
-| Token registry (verified contract per chain) | built, tested | [`data/tokens.csv`](data/tokens.csv), [`oneprice/registry.py`](oneprice/registry.py) |
-| Nasdaq reference collector (Finnhub) | built, tested offline | [`oneprice/collect/reference.py`](oneprice/collect/reference.py) |
+| Pricing math (premium, cross-venue spread, dividend multiplier) | built, tested | [`assayer/metrics.py`](assayer/metrics.py), [`tests/test_metrics.py`](tests/test_metrics.py) |
+| Token registry (verified contract per chain) | built, tested | [`data/tokens.csv`](data/tokens.csv), [`assayer/registry.py`](assayer/registry.py) |
+| Nasdaq reference collector (Finnhub) | built, tested offline | [`assayer/collect/reference.py`](assayer/collect/reference.py) |
 | Collection every 5 minutes | built | [`.github/workflows/collect.yml`](.github/workflows/collect.yml) |
 | Database schema | built | [`sql/schema.sql`](sql/schema.sql) |
 | On-chain and exchange quote collectors | planned | |
 | Fragmentation Tax and router-savings simulation | planned | |
 | Dashboard and thesis page | planned | |
-| OnePrice Agent (paid via NEAR Intents 1Click, answers via NEAR AI Cloud) | planned | |
+| Assayer Agent (paid via NEAR Intents 1Click, answers via NEAR AI Cloud) | planned | |
 
 ## Method
 
@@ -45,14 +45,14 @@ Reference prices carry a `market_open` flag, because nights and weekends have no
 
 ## Limitations
 
-- NEAR Intents' public 1Click API does not list tokenized stocks today, so OnePrice measures these markets; it does not trade them through Intents.
+- NEAR Intents' public 1Click API does not list tokenized stocks today, so Assayer measures these markets; it does not trade them through Intents.
 - GitHub's scheduler can start runs several minutes late, so collection intervals are approximately, not exactly, 5 minutes.
 
 ## Repo map
 
 | Path | What |
 | --- | --- |
-| `oneprice/` | Python package: math, registry, storage, collectors |
+| `assayer/` | Python package: math, registry, storage, collectors |
 | `tests/` | pytest suite, runs offline |
 | `data/` | token registry; `snapshot/` holds exported real data |
 | `sql/` | Postgres schema |

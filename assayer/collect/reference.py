@@ -1,6 +1,6 @@
 """Nasdaq reference prices from Finnhub: the 'one fair price' every venue is measured against.
 
-Run:  python -m oneprice.collect.reference
+Run:  python -m assayer.collect.reference
 Needs FINNHUB_KEY. Writes to Postgres when DATABASE_URL is set, otherwise to
 data/local/reference_prices.jsonl.
 """
@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from oneprice import registry, storage
+from assayer import registry, storage
 
 FINNHUB_BASE = "https://finnhub.io/api/v1"
 TIMEOUT_SECONDS = 15

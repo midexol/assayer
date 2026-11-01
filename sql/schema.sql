@@ -1,4 +1,4 @@
--- OnePrice schema (Postgres: Supabase or Neon).
+-- Assayer schema (Postgres: Supabase or Neon).
 -- Apply once: paste into the provider's SQL editor, or run
 --   psql "$DATABASE_URL" -f sql/schema.sql
 -- Safe to re-run: every statement is IF NOT EXISTS.

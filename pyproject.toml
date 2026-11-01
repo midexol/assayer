@@ -1,5 +1,5 @@
 [project]
-name = "oneprice"
+name = "assayer"
 version = "0.1.0"
 description = "Measures how far tokenized US stocks drift from one fair price across chains and exchanges."
 requires-python = ">=3.11"
@@ -12,7 +12,7 @@ db = ["psycopg[binary]>=3.1"]
 dev = ["pytest>=8"]
 
 [tool.setuptools.packages.find]
-include = ["oneprice*"]
+include = ["assayer*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -26,4 +26,4 @@ jobs:
           cache: pip
       - run: pip install -e ".[db]"
       - name: Nasdaq reference prices
-        run: python -m oneprice.collect.reference
+        run: python -m assayer.collect.reference

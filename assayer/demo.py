@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from oneprice import registry
+from assayer import registry
 
 SNAPSHOT_DIR = Path(__file__).resolve().parent.parent / "data" / "snapshot"
 

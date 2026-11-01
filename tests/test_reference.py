@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 
 import pytest
 
-from oneprice import storage
-from oneprice.collect.reference import QuoteError, parse_quote
+from assayer import storage
+from assayer.collect.reference import QuoteError, parse_quote
 
 NOW = datetime(2026, 11, 2, 15, 0, tzinfo=timezone.utc)
 
