@@ -25,7 +25,7 @@ def main() -> int:
     reference = SNAPSHOT_DIR / "reference_prices.jsonl"
     if not reference.exists():
         print("\nNo snapshot yet: data/snapshot/ is filled once live collection has run.")
-        print("Nothing below this line is measured data, so nothing is printed.")
+        print("No measured prices to show yet.")
         return 0
 
     rows = [json.loads(line) for line in reference.read_text().splitlines() if line]
