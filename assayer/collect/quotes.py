@@ -24,9 +24,10 @@ from assayer.registry import Token
 SIZES_USD = (1_000, 10_000)
 TIMEOUT_SECONDS = 20
 PAUSE_SECONDS = 0.4  # stay well inside free-tier rate limits
+RETRIES = 3          # on HTTP 429 (rate limited), with growing waits
 
 JUPITER_QUOTE = "https://lite-api.jup.ag/swap/v1/quote"
-JUPITER_TOKENS = "https://lite-api.jup.ag/tokens/v2/search"
+SOLANA_RPC = "https://solana-rpc.publicnode.com"
 KYBER_ROUTES = "https://aggregator-api.kyberswap.com/{chain}/api/v1/routes"
 EVM_RPC = {
     "ethereum": "https://ethereum-rpc.publicnode.com",
@@ -84,6 +85,13 @@ def parse_kyber(body: dict) -> int:
     return int(out)
 
 
+def parse_spl_decimals(body: dict) -> int:
+    value = ((body.get("result") or {}).get("value") or {}).get("decimals")
+    if value is None:
+        raise QuoteError(f"getTokenSupply failed: {body.get('error') or body}")
+    return int(value)
+
+
 def parse_erc20_decimals(body: dict) -> int:
     result = body.get("result")
     if not result or result == "0x":
@@ -98,27 +106,36 @@ class Quoter:
         self.session = session
         self._decimals: dict[str, int] = {}
 
+    def _request(self, method: str, url: str, **kwargs) -> dict:
+        for attempt in range(RETRIES + 1):
+            time.sleep(PAUSE_SECONDS * (1 + 3 * attempt))
+            response = self.session.request(method, url, timeout=TIMEOUT_SECONDS, **kwargs)
+            if response.status_code == 429 and attempt < RETRIES:
+                continue
+            if response.status_code >= 500 or response.status_code == 429:
+                response.raise_for_status()
+            body = response.json()
+            if not isinstance(body, dict):
+                raise QuoteError(f"unexpected response from {url}: {str(body)[:200]}")
+            return body
+        raise QuoteError(f"{url}: still rate limited after {RETRIES} retries")
+
     def _get(self, url: str, params: dict, headers: dict | None = None) -> dict:
-        time.sleep(PAUSE_SECONDS)
-        response = self.session.get(url, params=params, headers=headers, timeout=TIMEOUT_SECONDS)
-        if response.status_code >= 500:
-            response.raise_for_status()
-        return response.json()
+        return self._request("GET", url, params=params, headers=headers)
+
+    def _rpc(self, url: str, method: str, params: list) -> dict:
+        return self._request("POST", url, json={"jsonrpc": "2.0", "id": 1,
+                                                "method": method, "params": params})
 
     def decimals(self, token: Token) -> int:
         if token.address in self._decimals:
             return self._decimals[token.address]
         if token.chain == "solana":
-            matches = self._get(JUPITER_TOKENS, {"query": token.address})
-            found = [m for m in matches if m.get("id") == token.address]
-            if not found:
-                raise QuoteError(f"{token.venue_id}: mint not found on Jupiter")
-            value = int(found[0]["decimals"])
+            value = parse_spl_decimals(self._rpc(SOLANA_RPC, "getTokenSupply", [token.address]))
         else:
-            call = {"jsonrpc": "2.0", "id": 1, "method": "eth_call",
-                    "params": [{"to": token.address, "data": "0x313ce567"}, "latest"]}
-            response = self.session.post(EVM_RPC[token.chain], json=call, timeout=TIMEOUT_SECONDS)
-            value = parse_erc20_decimals(response.json())
+            value = parse_erc20_decimals(self._rpc(
+                EVM_RPC[token.chain], "eth_call",
+                [{"to": token.address, "data": "0x313ce567"}, "latest"]))
         self._decimals[token.address] = value
         return value
 
@@ -156,11 +173,12 @@ def quote_token(quoter: Quoter, token: Token, now: datetime) -> list[dict]:
     return rows
 
 
-def collect(now: datetime | None = None) -> tuple[list[dict], list[str]]:
+def collect(now: datetime | None = None) -> tuple[list[dict], list[dict]]:
+    """Return (snapshot rows, error rows). Errors never stop other venues."""
     now = now or datetime.now(timezone.utc)
     tokens, _ = registry.load()
     rows: list[dict] = []
-    errors: list[str] = []
+    errors: list[dict] = []
     with requests.Session() as session:
         quoter = Quoter(session)
         for token in tokens:
@@ -168,17 +186,20 @@ def collect(now: datetime | None = None) -> tuple[list[dict], list[str]]:
                 continue
             try:
                 rows.extend(quote_token(quoter, token, now))
-            except (requests.RequestException, QuoteError, ValueError, KeyError) as error:
-                errors.append(f"{token.venue_id}: {error}")
+            except Exception as error:  # one bad venue must never stop the others
+                errors.append({"ts": now.isoformat(), "source": "quotes",
+                               "venue_id": token.venue_id,
+                               "error": f"{type(error).__name__}: {error}"[:500]})
     return rows, errors
 
 
 def main() -> int:
     rows, errors = collect()
     written = storage.write("snapshots", rows)
-    print(f"quotes: wrote {written} rows to {storage.target()}")
+    storage.write("collect_errors", errors)
+    print(f"quotes: wrote {written} rows to {storage.target()}, {len(errors)} venues failed")
     for error in errors:
-        print(f"quotes: {error}", file=sys.stderr)
+        print(f"quotes: {error['venue_id']}: {error['error']}", file=sys.stderr)
     return 0 if rows else 1
 
 

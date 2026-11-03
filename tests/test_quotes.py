@@ -65,3 +65,24 @@ def test_quote_token_builds_buy_and_sell_rows_for_each_size():
     assert all(r["fill_price"] == pytest.approx(200) for r in buys)
     assert all(r["fill_price"] == pytest.approx(198) for r in sells)
     assert all(r["venue"] == "jupiter" for r in rows)
+
+
+def test_spl_decimals_parsed_from_token_supply():
+    from assayer.collect.quotes import parse_spl_decimals
+    body = {"result": {"value": {"amount": "1", "decimals": 8, "uiAmount": 1e-8}}}
+    assert parse_spl_decimals(body) == 8
+    with pytest.raises(QuoteError):
+        parse_spl_decimals({"error": {"message": "Invalid param"}})
+
+
+def test_one_failing_venue_does_not_stop_the_rest(monkeypatch):
+    class Flaky(FakeQuoter):
+        def decimals(self, token):
+            if token.symbol == "NVDAx":
+                raise AttributeError("'str' object has no attribute 'get'")
+            return 8
+
+    monkeypatch.setattr(quotes, "Quoter", lambda session: Flaky())
+    rows, errors = quotes.collect(NOW)
+    assert [e["venue_id"] for e in errors] == ["solana:NVDAx"]
+    assert rows and all(r["symbol"] != "NVDAx" for r in rows)

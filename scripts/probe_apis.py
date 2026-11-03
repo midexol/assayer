@@ -20,7 +20,8 @@ def show(label, response):
 
 
 s = requests.Session()
-show("jupiter token search", s.get(quotes.JUPITER_TOKENS, params={"query": NVDAX}, timeout=20))
+show("solana decimals", s.post(quotes.SOLANA_RPC, json={
+    "jsonrpc": "2.0", "id": 1, "method": "getTokenSupply", "params": [NVDAX]}, timeout=20))
 show("jupiter quote USDC->NVDAx", s.get(quotes.JUPITER_QUOTE, params={
     "inputMint": quotes.STABLES["solana"].address, "outputMint": NVDAX,
     "amount": 1_000_000_000, "slippageBps": 50}, timeout=20))

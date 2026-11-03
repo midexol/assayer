@@ -19,7 +19,10 @@ TABLES = {
     "reference_prices": ["ts", "ticker", "price", "quote_ts", "market_open", "source"],
     "snapshots": ["ts", "ticker", "venue", "chain", "symbol", "side", "size_usd",
                   "fill_price", "k_mult"],
+    # Archived to the data branch only; not a Postgres table.
+    "collect_errors": ["ts", "source", "venue_id", "error"],
 }
+LOCAL_ONLY = {"collect_errors"}
 
 
 def target() -> str:
@@ -33,7 +36,7 @@ def write(table: str, rows: list[dict], directory: Path = LOCAL_DIR) -> int:
         return 0
     written = _write_local(table, rows, directory)
     url = os.environ.get("DATABASE_URL")
-    if url:
+    if url and table not in LOCAL_ONLY:
         _write_postgres(url, table, rows)
     return written
 
