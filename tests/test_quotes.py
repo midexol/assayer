@@ -1,0 +1,67 @@
+from datetime import datetime, timezone
+
+import pytest
+
+from assayer.collect import quotes
+from assayer.collect.quotes import (QuoteError, fill_price, from_units, parse_erc20_decimals,
+                                    parse_jupiter, parse_kyber, quote_token, to_units)
+from assayer.registry import Token
+
+NOW = datetime(2026, 11, 3, 15, 0, tzinfo=timezone.utc)
+
+
+def test_unit_conversion_round_trips():
+    assert to_units(1000, 6) == 1_000_000_000
+    assert from_units(1_000_000_000, 6) == 1000
+    assert to_units(1000, 18) == 10**21
+
+
+def test_fill_price_is_stable_per_token():
+    assert fill_price(1000, 5) == 200
+    with pytest.raises(QuoteError):
+        fill_price(1000, 0)
+
+
+def test_parsers_read_output_amounts():
+    assert parse_jupiter({"inAmount": "1000000000", "outAmount": "4975000000"}) == 4975000000
+    assert parse_kyber({"code": 0, "data": {"routeSummary": {"amountOut": "123"}}}) == 123
+    assert parse_erc20_decimals({"result": "0x" + "0" * 62 + "12"}) == 18
+
+
+@pytest.mark.parametrize("body", [{"error": "No routes found"}, {"outAmount": "0"}])
+def test_jupiter_without_route_raises(body):
+    with pytest.raises(QuoteError):
+        parse_jupiter(body)
+
+
+def test_kyber_error_code_raises():
+    with pytest.raises(QuoteError):
+        parse_kyber({"code": 4008, "message": "route not found"})
+
+
+class FakeQuoter:
+    """Buys 5 tokens per $1,000 and sells them back for 990 (a 1% round trip)."""
+
+    def decimals(self, token):
+        return 8
+
+    def swap_out(self, chain, token_in, token_out, amount_in):
+        stable = quotes.STABLES[chain]
+        if token_in == stable.address:  # buying tokens with stablecoin
+            usd = from_units(amount_in, stable.decimals)
+            return to_units(usd / 200, 8)
+        tokens = from_units(amount_in, 8)  # selling tokens for stablecoin
+        return to_units(tokens * 198, stable.decimals)
+
+
+def test_quote_token_builds_buy_and_sell_rows_for_each_size():
+    token = Token("NVDA", "xStocks", "NVDAx", "solana",
+                  "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh", "verified", "test")
+    rows = quote_token(FakeQuoter(), token, NOW)
+    assert len(rows) == 4
+    buys = [r for r in rows if r["side"] == "buy"]
+    sells = [r for r in rows if r["side"] == "sell"]
+    assert {r["size_usd"] for r in buys} == {1000, 10000}
+    assert all(r["fill_price"] == pytest.approx(200) for r in buys)
+    assert all(r["fill_price"] == pytest.approx(198) for r in sells)
+    assert all(r["venue"] == "jupiter" for r in rows)
