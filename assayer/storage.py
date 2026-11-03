@@ -1,6 +1,8 @@
-"""Where collected rows go: Postgres when DATABASE_URL is set, else local JSONL files.
+"""Where collected rows go.
 
-Local files let anyone run the collectors without a database account.
+Every row is always appended to local JSONL files (data/local/), which the
+collection workflow then archives to the repo's `data` branch. When
+DATABASE_URL is set, rows are also inserted into Postgres for the live site.
 """
 
 from __future__ import annotations
@@ -15,20 +17,25 @@ LOCAL_DIR = Path(__file__).resolve().parent.parent / "data" / "local"
 # comes from untrusted input into SQL.
 TABLES = {
     "reference_prices": ["ts", "ticker", "price", "quote_ts", "market_open", "source"],
+    "snapshots": ["ts", "ticker", "venue", "chain", "symbol", "side", "size_usd",
+                  "fill_price", "k_mult"],
 }
 
 
 def target() -> str:
-    return "postgres" if os.environ.get("DATABASE_URL") else str(LOCAL_DIR)
+    return f"{LOCAL_DIR} and postgres" if os.environ.get("DATABASE_URL") else str(LOCAL_DIR)
 
 
-def write(table: str, rows: list[dict]) -> int:
+def write(table: str, rows: list[dict], directory: Path = LOCAL_DIR) -> int:
     if table not in TABLES:
         raise ValueError(f"unknown table {table!r}")
     if not rows:
         return 0
+    written = _write_local(table, rows, directory)
     url = os.environ.get("DATABASE_URL")
-    return _write_postgres(url, table, rows) if url else _write_local(table, rows)
+    if url:
+        _write_postgres(url, table, rows)
+    return written
 
 
 def _write_local(table: str, rows: list[dict], directory: Path = LOCAL_DIR) -> int:
