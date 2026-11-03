@@ -10,9 +10,10 @@ test:
 demo:
 	python -m assayer.demo
 
-# Needs FINNHUB_KEY (and DATABASE_URL to write to Postgres).
+# One collection round. Needs FINNHUB_KEY; DATABASE_URL is optional.
 collect:
 	python -m assayer.collect.reference
+	python -m assayer.collect.quotes
 
 # Thesis charts and numbers. Built from day 7 onward.
 report:
