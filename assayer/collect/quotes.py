@@ -27,7 +27,7 @@ PAUSE_SECONDS = 0.4  # stay well inside free-tier rate limits
 RETRIES = 3          # on HTTP 429 (rate limited), with growing waits
 
 JUPITER_QUOTE = "https://lite-api.jup.ag/swap/v1/quote"
-SOLANA_RPC = "https://solana-rpc.publicnode.com"
+SOLANA_RPC = "https://api.mainnet-beta.solana.com"
 KYBER_ROUTES = "https://aggregator-api.kyberswap.com/{chain}/api/v1/routes"
 EVM_RPC = {
     "ethereum": "https://ethereum-rpc.publicnode.com",
