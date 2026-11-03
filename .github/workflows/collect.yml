@@ -1,11 +1,17 @@
 name: Collect prices
 
-# Every 5 minutes (GitHub's minimum; runs can start a few minutes late).
-# Keys come from repository secrets: Settings > Secrets and variables > Actions.
+# One long job collects every 5 minutes for ~5h40m, then starts the next run
+# itself. The schedule is only a backup that restarts the chain if it stops.
+# Every round is committed to the `data` branch, so nothing is lost even
+# without a database. Keys come from repository secrets.
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "7 */3 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write  # push collected rows to the data branch
+  actions: write   # start the next run of this workflow
 
 concurrency:
   group: collect
@@ -14,16 +20,31 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 355
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       FINNHUB_KEY: ${{ secrets.FINNHUB_KEY }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: archive
+          fetch-depth: 1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -e ".[db]"
-      - name: Nasdaq reference prices
-        run: python -m assayer.collect.reference
+      - name: Configure archive commits
+        working-directory: archive
+        run: |
+          git config user.name "assayer-collector"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Collect every 5 minutes
+        run: bash scripts/collect_loop.sh
+      - name: Start the next run
+        if: success() || failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run collect.yml --ref main
