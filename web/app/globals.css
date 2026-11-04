@@ -180,6 +180,7 @@ td { padding: 11px 0 11px 12px; border-top: 1px solid var(--line); text-align: r
 th:first-child, td:first-child { text-align: left; padding-left: 0; }
 td.l, th.l { text-align: left; }
 .key { display: inline-block; width: 10px; height: 3px; margin-right: 8px; vertical-align: middle; }
+.figure { font-family: var(--serif); font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.02em; }
 .facts { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .facts div { display: flex; justify-content: space-between; gap: 12px; }
 .scroll-x { overflow-x: auto; }

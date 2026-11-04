@@ -23,9 +23,10 @@ import {
   type Size,
   type Venue,
 } from "@/lib/assay";
-import { DATA_URL, RAW_URL } from "@/lib/urls";
+import { DATA_URL, RAW_URL, THESIS_URL } from "@/lib/urls";
+import { dollars, venueLabel, type Thesis } from "@/lib/thesis";
 
-type View = "overview" | "venues" | "alerts" | "agent";
+type View = "overview" | "venues" | "cost" | "alerts" | "agent";
 interface Alert {
   id: number;
   ticker: string;
@@ -35,6 +36,7 @@ interface Alert {
 const VIEWS: { key: View; label: string; icon: string }[] = [
   { key: "overview", label: "Overview", icon: "M3 13h7V3H3v10zm0 8h7v-6H3v6zm11 0h7V11h-7v10zm0-18v6h7V3h-7z" },
   { key: "venues", label: "Venues", icon: "M4 6h16M4 12h16M4 18h16" },
+  { key: "cost", label: "Cost of the split", icon: "M12 3v18M17 7.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.6 5 3.5 5 1.6 5 3.5-2.2 3-5 3-5-1.1-5-3" },
   { key: "alerts", label: "Alerts", icon: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" },
   { key: "agent", label: "Agent API", icon: "M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" },
 ];
@@ -60,8 +62,9 @@ function writeAlerts(alerts: Alert[]) {
   }
 }
 
-export function Dashboard({ initial }: { initial: Data }) {
+export function Dashboard({ initial, initialThesis }: { initial: Data; initialThesis: Thesis }) {
   const [data, setData] = useState(initial);
+  const [thesis, setThesis] = useState(initialThesis);
   const [view, setView] = useState<View>("overview");
   const [size, setSize] = useState<Size>("a");
   const tickers = Object.keys(data.stocks);
@@ -76,6 +79,11 @@ export function Dashboard({ initial }: { initial: Data }) {
           const next = (await res.json()) as Data;
           if (next.rounds?.length) setData(next);
         }
+        const t = await fetch(THESIS_URL, { cache: "no-store" });
+        if (t.ok) {
+          const next = (await t.json()) as Thesis;
+          if (next.headline) setThesis(next);
+        }
       } catch {
         /* keep showing the last good round */
       }
@@ -87,6 +95,7 @@ export function Dashboard({ initial }: { initial: Data }) {
   const headings: Record<View, [string, string]> = {
     overview: ["Overview", `${ticker} across every venue, ${SIZES[size].label} buys`],
     venues: ["Venues", `Every venue, round of ${updatedLabel(data)}`],
+    cost: ["Cost of the split", `What buying in the wrong place costs, ${SIZES[size].label} buys`],
     alerts: ["Alerts", "Get told when a venue drifts too far from Nasdaq"],
     agent: ["Agent API", "The same answers, sold to trading bots"],
   };
@@ -158,6 +167,7 @@ export function Dashboard({ initial }: { initial: Data }) {
           )}
           {view === "venues" && <Venues data={data} size={size} />}
           {view === "alerts" && <Alerts data={data} size={size} />}
+          {view === "cost" && <Cost thesis={thesis} ticker={ticker} size={size} onPick={setTicker} />}
           {view === "agent" && <Agent ticker={ticker} size={size} />}
 
           <footer className="dash-foot">
@@ -612,5 +622,118 @@ function Agent({ ticker, size }: { ticker: string; size: Size }) {
         </pre>
       </section>
     </div>
+  );
+}
+
+function Cost({ thesis, ticker, size, onPick }: { thesis: Thesis; ticker: string; size: Size; onPick: (t: string) => void }) {
+  const key = String(SIZES[size].usd) as "1000" | "10000";
+  const usd = SIZES[size].usd;
+  const h = thesis.headline[key];
+  const stock = thesis.stocks[ticker];
+  const span =
+    thesis.from && thesis.to
+      ? `${thesis.rounds_used} ${thesis.market_open_only ? "market-open " : ""}rounds between ${thesis.from.slice(0, 10)} and ${thesis.to.slice(0, 10)}`
+      : "no rounds yet";
+
+  return (
+    <>
+      <div className="grid">
+        <section className="panel narrow">
+          <h2>Extra paid at an average venue</h2>
+          <span className="figure">{dollars(h.tax_mean, usd)}</span>
+          <span className="muted">
+            per {SIZES[size].label} buy, against the cheapest venue that round ({pts(h.tax_mean)}). Including the{" "}
+            {h.thin_venues} thin pools: {dollars(h.tax_mean_all_venues, usd)}.
+          </span>
+        </section>
+        <section className="panel narrow">
+          <h2>Typical gap, cheapest to dearest</h2>
+          <span className="figure">{pts(h.spread_median)}</span>
+          <span className="muted">Median spread between usable venues, across all five stocks.</span>
+        </section>
+        <section className="panel narrow">
+          <h2>Saved by re-routing every round</h2>
+          <span className="figure">{dollars(h.router_savings_mean, usd)}</span>
+          <span className="muted">
+            per buy, against always using each stock&apos;s cheapest venue on median. Knowing the right venue matters
+            more than switching between them.
+          </span>
+        </section>
+      </div>
+
+      <section className="panel">
+        <h2>Cost of the split by stock at {SIZES[size].label}, usable venues</h2>
+        <div className="scroll-x">
+          <table style={{ minWidth: 820 }}>
+            <thead>
+              <tr>
+                <th>Stock</th>
+                <th className="l">Cheapest on median</th>
+                <th>Median spread</th>
+                <th>Extra at average venue</th>
+                <th>With thin pools</th>
+                <th>Re-routing saves</th>
+                <th>Longest gap over {thesis.gap_points} pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(thesis.stocks).map(([t, s]) => {
+                const u = s[key].usable_venues;
+                const a = s[key].all_venues;
+                return (
+                  <tr key={t}>
+                    <td>
+                      <button type="button" className="small-btn" aria-pressed={t === ticker} onClick={() => onPick(t)}>
+                        {t}
+                      </button>
+                    </td>
+                    <td className="l">{venueLabel(u.best_static_venue)}</td>
+                    <td>{pts(u.spread_median)}</td>
+                    <td className="strong">{dollars(u.tax_mean, usd)}</td>
+                    <td className={a.tax_mean !== u.tax_mean ? "coral strong" : "muted"}>{a.tax_mean !== u.tax_mean ? dollars(a.tax_mean, usd) : "No thin pools"}</td>
+                    <td>{dollars(u.router_savings_mean, usd)}</td>
+                    <td>{u.gap_minutes_max === null ? "None" : `${u.gap_minutes_max} min`}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {stock && (
+        <section className="panel">
+          <h2>
+            {ticker} venues at {SIZES[size].label}: median premium and the cost of buying then selling straight back
+          </h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Venue</th>
+                <th>Median over Nasdaq</th>
+                <th>Round trip</th>
+                <th className="l">Pool</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stock[key].venues.map((v) => (
+                <tr key={v.id}>
+                  <td>{venueLabel(v.id)}</td>
+                  <td className={isDear(v.median_premium) ? "coral strong" : "strong"}>{pct(v.median_premium)}</td>
+                  <td>{dollars(v.round_trip_median, usd)}</td>
+                  <td className="l muted">{v.thin ? `Thin: over ${thesis.thin_points}% from Nasdaq` : "Usable"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+
+      <p className="muted" style={{ margin: 0, lineHeight: 1.6 }}>
+        Measured over {span}. Rounds while Nasdaq is closed are left out, because its last price goes stale. Thin
+        pools are venues more than {thesis.thin_points}% from Nasdaq on median; they are shown, but kept out of the
+        headline averages. Method: <a href="https://github.com/midexol/assayer/blob/main/assayer/thesis.py">assayer/thesis.py</a>.
+      </p>
+    </>
   );
 }

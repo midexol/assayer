@@ -2,11 +2,18 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { bestVenue, isDear, pct, ranked, symlog, updatedLabel, venueName, money } from "@/lib/assay";
 import { loadDashboard } from "@/lib/data";
+import { dollars, loadThesis, venueLabel } from "@/lib/thesis";
 
 export const revalidate = 300;
 
 export default async function Landing() {
-  const d = await loadDashboard();
+  const [d, thesis] = await Promise.all([loadDashboard(), loadThesis()]);
+  const big = thesis.headline["10000"];
+  const worstThin = Object.values(thesis.stocks)
+    .flatMap((s) => s["1000"].venues)
+    .filter((v) => v.thin && v.median_premium !== null)
+    .sort((x, y) => (y.median_premium ?? 0) - (x.median_premium ?? 0))[0];
+  const bestNvda = thesis.stocks.NVDA?.["10000"].usable_venues.best_static_venue ?? null;
   const tickers = Object.keys(d.stocks);
 
   const rows = tickers
@@ -118,6 +125,37 @@ export default async function Landing() {
           </div>
         </section>
       )}
+
+      <section className="wrap split">
+        <div className="arrive" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <h2 className="display">What the split costs.</h2>
+          <p className="lede">
+            Measured over {thesis.rounds_used} rounds while Nasdaq was open, on venues that trade near the real price.
+            Thin pools are counted separately.
+          </p>
+        </div>
+        <div className="ask arrive">
+          <div>
+            <small>Buying $10,000 at an average venue instead of the cheapest</small>
+            <span className="gold">{dollars(big.tax_mean, 10000)} more</span>
+          </div>
+          <div>
+            <small>Switching venue every round instead of picking one well</small>
+            <span>
+              {dollars(big.router_savings_mean, 10000)} saved. The cheapest venue barely changes: for Nvidia it was{" "}
+              {venueLabel(bestNvda)}.
+            </span>
+          </div>
+          {worstThin && (
+            <div>
+              <small>The thinnest pool, on median, for a $1,000 buy</small>
+              <span className="coral">
+                {venueLabel(worstThin.id)}, {pct(worstThin.median_premium)} over Nasdaq
+              </span>
+            </div>
+          )}
+        </div>
+      </section>
 
       {answer && (
         <section className="wrap split">
