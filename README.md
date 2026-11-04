@@ -4,16 +4,61 @@ Assayer measures how far tokenized US stocks (Ondo `…on` tokens and xStocks `�
 
 **Other project by the same entrant:** [Lifeboat](https://github.com/midexol/lifeboat), a quantum-attack rescue for Bitcoin, Ethereum, BNB Chain and NEAR wallets. The two projects are independent and share no code.
 
+## What it is, in one minute
+
+- **The problem.** One share of Nvidia now trades as up to five different tokens:
+  - xStocks `NVDAx` on Solana and on Gate.io
+  - Ondo `NVDAon` on Ethereum, BNB Chain and Solana
+
+  Each sits in its own pool, at its own price. A trader has no way to see which one is closest to the real Nasdaq price.
+- **What Assayer does.**
+  - Every 5 minutes it asks each venue what a real $1,000 and $10,000 buy and sell would fill at, and compares the fill with Nasdaq. That covers 25 venues: 20 on-chain plus 5 on Gate.io.
+  - It publishes the results as a live dashboard and as raw files anyone can re-run.
+  - It sells the answer to trading bots for 0.25 USDC, paid from any chain through NEAR Intents.
+- **How NEAR fits.**
+  - **Payment:** bots pay per answer through NEAR Intents 1Click, in any token on any chain.
+  - **Explanation:** each paid answer comes with a reason written on NEAR AI Cloud.
+  - **The thesis below:** fragmentation across chains is the cost that chain-abstracted routing exists to remove.
+
+Tracks: `thesis`, `agents`, `open`.
+
 ## Try it
 
+**Run the tests and the collectors** (Python 3.11+):
+
 ```sh
-git clone <this repo> && cd assayer
+git clone https://github.com/midexol/assayer && cd assayer
 make install
-make test    # unit tests for the pricing math, registry and collector parsing
-make demo    # runs offline, no keys: registry coverage and the latest snapshot
+make test    # pricing math, registry, collectors, thesis: offline, no keys
+make demo    # offline: registry coverage and the latest snapshot
 ```
 
-`make demo` reads `data/snapshot/`. Until live collection has produced a snapshot it prints registry coverage only and says that no measured data exists yet.
+**Run the website** (Node 22):
+
+```sh
+cd web && npm install && npm run dev
+```
+
+- Open `http://localhost:3000`. You should see the landing page, built from the latest real round on the `data` branch.
+- Open `/dashboard`. You should see Overview, Venues, Cost of the split, Alerts and Agent API, all working on real data. The data reloads every 5 minutes.
+- Run `curl -X POST localhost:3000/api/v1/best-venue -H 'content-type: application/json' -d '{"ticker":"NVDA","side":"buy","size_usd":10000}'`. You should get HTTP 402 with the price and how to pay.
+- Add `"preview": true` to the same request. You should get the cheapest venue right now, free and marked unpaid.
+
+The full paid flow (quote, deposit address, settlement check, answer) is in [`web/README.md`](web/README.md#api).
+
+**Re-run the numbers yourself.** The raw rounds are on the [`data` branch](../../tree/data). Use `python -m assayer.thesis <checkout of the data branch>` to rebuild `site/thesis.json`.
+
+## The thesis
+
+**Claim.** Tokenized equities are fragmenting across chains faster than liquidity follows them. The cost of that split is real and measurable, and most of it is an information problem: knowing *where* to trade. That is the problem chain-abstracted execution, which is what NEAR Intents provides, and paid agent answers exist to solve.
+
+**What the data says so far** (market-open rounds only; the dashboard's "Cost of the split" view recomputes this every 5 minutes):
+
+- **The thin pools:** several Ondo pools on Solana and BNB Chain trade far from Nasdaq. AAPLon on Solana sat about **+1,880%** over Nasdaq on median for a $1,000 buy, and NVDAon on BNB Chain about **+186%** at $10,000. A buyer who lands there loses most of the trade.
+- **The usable venues:** among venues that trade near Nasdaq, buying $10,000 at an average one cost about **$68 more** than the cheapest one that round. The cheapest-to-dearest gap was about **1.2 points**.
+- **What helps most:** re-routing every round saved almost nothing over always using the venue that is cheapest on median, which was xStocks on Solana for every stock so far. The fix is knowing the right venue, not chasing it. That is the answer the Agent API sells.
+
+Definitions and code: [`assayer/thesis.py`](assayer/thesis.py). The sample is still small (it grows by about 78 market-open rounds each trading day), so treat early numbers as directional.
 
 ## Status
 
@@ -38,6 +83,10 @@ For a token whose price is `P` and which represents `k` shares (Ondo tokens rein
 
 - **Premium** = `P / (k × R) − 1`. Positive means the venue charges more than Nasdaq.
 - **Cross-venue spread** = most expensive per-share price minus cheapest, at the same moment, also reported as a fraction of `R`.
+- **Fragmentation Tax**: the average extra paid at a venue compared with the cheapest venue that round.
+- **Router savings**: how much picking the cheapest venue every round saves over always using the venue that is cheapest on median.
+- **Gap lifespan**: how long the spread stays above 0.5 points.
+- **Round-trip cost**: buy then sell straight back at the same venue.
 
 Reference prices carry a `market_open` flag, because nights and weekends have no live Nasdaq price to compare against.
 
@@ -46,6 +95,7 @@ Reference prices carry a `market_open` flag, because nights and weekends have no
 - Tokens: [`data/tokens.csv`](data/tokens.csv). Lookalike tokens with the same symbols exist, so only rows marked `verified` or `single-source` are used. `TODO` and `CONFLICT` rows are skipped and listed by `make demo`.
 - Reference prices: Finnhub `/quote` and `/stock/market-status`.
 - Executable quotes: for each venue and size, a buy spends the chain's stablecoin (USDC on Solana and Ethereum, USDT on BNB) and a sell returns exactly the tokens that buy received. `fill_price` is stablecoin per token.
+- Exchange quotes: the public Gate.io order book (`NVDAX_USDT` and so on), walked level by level for the same $1,000 and $10,000 trades. USDT is counted at $1.
 - Raw collected data lives on the [`data` branch](../../tree/data), one commit per 5-minute round, filed as `raw/<date>/<table>.jsonl`.
 
 ## Limitations
@@ -53,6 +103,8 @@ Reference prices carry a `market_open` flag, because nights and weekends have no
 - NEAR Intents' public 1Click API does not list tokenized stocks today, so Assayer measures these markets; it does not trade them through Intents.
 - GitHub's own scheduler ran the original `*/5` cron only about three times a day on this new repository, and Nov 1 to 3 rows were not archived. Collection therefore runs as a long job that restarts itself, and the dataset starts on the day that change landed. Gaps can still occur while one run hands over to the next.
 - Stablecoins are counted as exactly $1.
+- **Ondo's dividend multiplier `k` is not yet applied to the stored premiums.** Ondo tokens reinvest dividends, so one token slowly comes to represent a little more than one share. For dividend payers such as SPY and QQQ, part of an Ondo token's premium is therefore accrued dividends, not overpricing. xStocks are unaffected.
+- **The thesis sample is small.** It counts only market-open rounds, and collection started on 3 November.
 
 ## Repo map
 
