@@ -129,6 +129,17 @@ def test_request_gives_up_after_retries(monkeypatch):
     monkeypatch.setattr(quotes.time, "sleep", lambda s: None)
     quoter = quotes.Quoter.__new__(quotes.Quoter)
     quoter.session = _FlakySession([_FakeResponse(503)] * 10)
-    with pytest.raises(quotes.QuoteError, match="failed after 2 retries"):
+    with pytest.raises(quotes.QuoteError, match="failed after 3 retries"):
         quoter._request("GET", "https://example")
-    assert quoter.session.calls == 3
+    assert quoter.session.calls == 4
+
+
+def test_rate_limits_wait_longer(monkeypatch):
+    from assayer.collect import quotes
+
+    waits = []
+    monkeypatch.setattr(quotes.time, "sleep", waits.append)
+    quoter = quotes.Quoter.__new__(quotes.Quoter)
+    quoter.session = _FlakySession([_FakeResponse(429), _FakeResponse(429)])
+    quoter._request("GET", "https://example")
+    assert waits[1] >= quotes.RATE_LIMIT_WAIT and waits[2] >= 2 * quotes.RATE_LIMIT_WAIT
