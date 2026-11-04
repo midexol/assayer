@@ -566,7 +566,7 @@ function Agent({ ticker, size }: { ticker: string; size: Size }) {
   const steps = [
     ["Request", `POST /api/v1/best-venue for ${ticker} at ${SIZES[size].label}`],
     ["Payment due", "0.25 USDC to a NEAR Intents deposit address, from any chain"],
-    ["Answer", "The cheapest venue in the latest round"],
+    ["Answer", "The cheapest venue in the latest round, and why"],
   ];
 
   return (
@@ -574,8 +574,8 @@ function Agent({ ticker, size }: { ticker: string; size: Size }) {
       <section className="panel narrow">
         <h2>Ask the Assayer Agent</h2>
         <p className="muted" style={{ margin: 0, lineHeight: 1.6 }}>
-          A bot asks where {ticker} is cheapest at {SIZES[size].label}. Paid answers settle through NEAR Intents; this
-          page uses the free preview so you can see the real response.
+          A bot asks where {ticker} is cheapest at {SIZES[size].label}. It pays 0.25 USDC from any chain through NEAR
+          Intents, and the paid answer comes with a reason written on NEAR AI Cloud. This page uses the free preview.
         </p>
         {steps.map(([title, text], i) => (
           <div key={title} className={`step ${i === step ? "now" : i < step ? "done" : ""}`}>

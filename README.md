@@ -30,8 +30,7 @@ This section is updated as work lands. Anything not marked built is not claimed.
 | Centralized-exchange order-book collector | planned | |
 | Fragmentation Tax and router-savings simulation | planned | |
 | Website: landing page and live dashboard (Overview, Venues, Alerts, Agent API) in Next.js | built, tested | [`web/`](web/), [`assayer/site_export.py`](assayer/site_export.py) |
-| Agent API endpoints (`/api/v1/venues`, `/api/v1/best-venue` with a 402 price and a free preview) | built | [`web/app/api/v1`](web/app/api/v1) |
-| Agent payment through NEAR Intents 1Click and answers through NEAR AI Cloud | planned | |
+| Agent API: pay 0.25 USDC from any chain through NEAR Intents 1Click (402, deposit address, settlement check), answer with a reason from NEAR AI Cloud | built, tested with the network faked; first live payment pending keys | [`web/lib/payment.ts`](web/lib/payment.ts), [`web/lib/reason.ts`](web/lib/reason.ts), [`web/app/api/v1/best-venue`](web/app/api/v1/best-venue), [`web/README.md`](web/README.md#api) |
 
 ## Method
 
