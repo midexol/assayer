@@ -86,3 +86,49 @@ def test_one_failing_venue_does_not_stop_the_rest(monkeypatch):
     rows, errors = quotes.collect(NOW)
     assert [e["venue_id"] for e in errors] == ["solana:NVDAx"]
     assert rows and all(r["symbol"] != "NVDAx" for r in rows)
+
+
+class _FakeResponse:
+    def __init__(self, status, body=None):
+        self.status_code = status
+        self._body = body
+
+    def json(self):
+        return self._body
+
+
+class _FlakySession:
+    """Fails with the given outcomes in order, then succeeds."""
+
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = 0
+
+    def request(self, *args, **kwargs):
+        self.calls += 1
+        outcome = self.outcomes.pop(0) if self.outcomes else _FakeResponse(200, {"ok": True})
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+
+def test_request_retries_server_errors_and_dropped_connections(monkeypatch):
+    import requests
+    from assayer.collect import quotes
+
+    monkeypatch.setattr(quotes.time, "sleep", lambda s: None)
+    quoter = quotes.Quoter.__new__(quotes.Quoter)
+    quoter.session = _FlakySession([_FakeResponse(522), requests.ConnectionError("reset")])
+    assert quoter._request("GET", "https://example") == {"ok": True}
+    assert quoter.session.calls == 3
+
+
+def test_request_gives_up_after_retries(monkeypatch):
+    from assayer.collect import quotes
+
+    monkeypatch.setattr(quotes.time, "sleep", lambda s: None)
+    quoter = quotes.Quoter.__new__(quotes.Quoter)
+    quoter.session = _FlakySession([_FakeResponse(503)] * 10)
+    with pytest.raises(quotes.QuoteError, match="failed after 2 retries"):
+        quoter._request("GET", "https://example")
+    assert quoter.session.calls == 3

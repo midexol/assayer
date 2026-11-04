@@ -24,7 +24,7 @@ from assayer.registry import Token
 SIZES_USD = (1_000, 10_000)
 TIMEOUT_SECONDS = 20
 PAUSE_SECONDS = 0.4  # stay well inside free-tier rate limits
-RETRIES = 3          # on HTTP 429 (rate limited), with growing waits
+RETRIES = 2          # on rate limits, 5xx and dropped connections, with growing waits
 
 JUPITER_QUOTE = "https://lite-api.jup.ag/swap/v1/quote"
 SOLANA_RPC = "https://api.mainnet-beta.solana.com"
@@ -107,18 +107,27 @@ class Quoter:
         self._decimals: dict[str, int] = {}
 
     def _request(self, method: str, url: str, **kwargs) -> dict:
+        """Send a request, retrying rate limits, server errors and dropped connections.
+
+        KyberSwap's aggregator returns the odd 5xx or times out under load; one or two
+        retries a few seconds apart recover almost all of them.
+        """
+        last: Exception | None = None
         for attempt in range(RETRIES + 1):
             time.sleep(PAUSE_SECONDS * (1 + 3 * attempt))
-            response = self.session.request(method, url, timeout=TIMEOUT_SECONDS, **kwargs)
-            if response.status_code == 429 and attempt < RETRIES:
+            try:
+                response = self.session.request(method, url, timeout=TIMEOUT_SECONDS, **kwargs)
+            except (requests.Timeout, requests.ConnectionError) as exc:
+                last = exc
                 continue
-            if response.status_code >= 500 or response.status_code == 429:
-                response.raise_for_status()
+            if response.status_code == 429 or response.status_code >= 500:
+                last = requests.HTTPError(f"{response.status_code} from {url}", response=response)
+                continue
             body = response.json()
             if not isinstance(body, dict):
                 raise QuoteError(f"unexpected response from {url}: {str(body)[:200]}")
             return body
-        raise QuoteError(f"{url}: still rate limited after {RETRIES} retries")
+        raise QuoteError(f"{url}: failed after {RETRIES} retries: {last}")
 
     def _get(self, url: str, params: dict, headers: dict | None = None) -> dict:
         return self._request("GET", url, params=params, headers=headers)
