@@ -16,3 +16,6 @@ jobs:
       - run: pip install -e .
       - name: Probe
         run: python scripts/probe_apis.py > /dev/null && python -m assayer.collect.quotes
+      - name: Probe exchanges
+        if: always()
+        run: python scripts/probe_cex.py
