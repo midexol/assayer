@@ -27,8 +27,9 @@ This section is updated as work lands. Anything not marked built is not claimed.
 | Database schema | built | [`sql/schema.sql`](sql/schema.sql) |
 | Centralized-exchange order-book collector | planned | |
 | Fragmentation Tax and router-savings simulation | planned | |
-| Dashboard and thesis page | planned | |
-| Assayer Agent (paid via NEAR Intents 1Click, answers via NEAR AI Cloud) | planned | |
+| Website: landing page and live dashboard (Overview, Venues, Alerts, Agent API) in Next.js | built, tested | [`web/`](web/), [`assayer/site_export.py`](assayer/site_export.py) |
+| Agent API endpoints (`/api/v1/venues`, `/api/v1/best-venue` with a 402 price and a free preview) | built | [`web/app/api/v1`](web/app/api/v1) |
+| Agent payment through NEAR Intents 1Click and answers through NEAR AI Cloud | planned | |
 
 ## Method
 

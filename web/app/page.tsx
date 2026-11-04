@@ -1,0 +1,164 @@
+import Link from "next/link";
+import { Logo } from "@/components/Logo";
+import { bestVenue, isDear, pct, ranked, symlog, updatedLabel, venueName, money } from "@/lib/assay";
+import { loadDashboard } from "@/lib/data";
+
+export const revalidate = 300;
+
+export default async function Landing() {
+  const d = await loadDashboard();
+  const tickers = Object.keys(d.stocks);
+
+  const rows = tickers
+    .map((t) => ({ t, stock: d.stocks[t], r: ranked(d.stocks[t], "a") }))
+    .filter((x) => x.r.length > 0);
+
+  // The stock with the widest $10,000 spread makes the clearest example.
+  const example =
+    tickers
+      .map((t) => ({ t, r: ranked(d.stocks[t], "b") }))
+      .filter((x) => x.r.length > 1)
+      .sort((x, y) => y.r[y.r.length - 1].premium - y.r[0].premium - (x.r[x.r.length - 1].premium - x.r[0].premium))[0] ?? null;
+  const answer = example ? bestVenue(d, example.t, "b") : null;
+
+  return (
+    <main>
+      <section className="hero">
+        <div className="hero-stage">
+          <header className="wrap topbar">
+            <span className="brand">
+              <Logo size={22} />
+              Built at NEAR HACKATHON
+            </span>
+            <Link href="/dashboard" className="pill pill-ivory">
+              Open the dashboard
+            </Link>
+          </header>
+          <div className="hero-center">
+            <h1 className="wordmark">ASSAYER</h1>
+            <p className="hero-line">The fair price of tokenized stocks, tested across every chain.</p>
+          </div>
+          <div className="hero-foot">Scroll</div>
+        </div>
+      </section>
+
+      <section className="wrap section">
+        <div className="head-row arrive">
+          <h2 className="display">One stock. Many prices.</h2>
+          <p className="lede">
+            Nvidia, Tesla and Apple now trade as tokens on Solana, Ethereum and BNB Chain. The same share does not cost
+            the same everywhere.
+          </p>
+        </div>
+        <div className="stock-rows arrive">
+          {rows.map(({ t, stock, r }) => {
+            const lo = r[0];
+            const hi = r[r.length - 1];
+            return (
+              <div className="stock-row" key={t}>
+                <div className="who">
+                  <span className="tick">{t}</span>
+                  <span className="muted">
+                    {stock.name}, Nasdaq {money(stock.ref)}
+                  </span>
+                </div>
+                <div className="cell">
+                  <small>Closest token</small>
+                  <span>
+                    <span className="gold strong">{pct(lo.premium)}</span> {venueName(lo.venue)}
+                  </span>
+                </div>
+                <div className="cell">
+                  <small>Dearest token</small>
+                  <span>
+                    <span className={isDear(hi.premium) ? "coral strong" : "gold strong"}>{pct(hi.premium)}</span>{" "}
+                    {venueName(hi.venue)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="note arrive">
+          Real $1,000 buys compared with Nasdaq, collection round of {updatedLabel(d)}
+          {d.market_open ? "." : ". Nasdaq was closed, so its last price is the reference."}
+        </p>
+      </section>
+
+      {example && (
+        <section className="wrap split">
+          <div className="arrive" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <h2 className="display">Weighed every five minutes.</h2>
+            <p className="lede">
+              Assayer asks each venue what a real $1,000 and $10,000 trade would fill at, then weighs the answer against
+              the Nasdaq price from the same minute.
+            </p>
+          </div>
+          <div className="arrive">
+            <div className="muted" style={{ display: "flex", justifyContent: "space-between", paddingBottom: 14, fontSize: 13 }}>
+              <span>{example.t}, $10,000 buy</span>
+              <span>Over Nasdaq</span>
+            </div>
+            {example.r.map(({ venue, premium }) => {
+              const color = isDear(premium) ? "var(--coral)" : "var(--gold)";
+              return (
+                <div className="scale-row" key={venue.id}>
+                  <div className="top">
+                    <span>{venueName(venue)}</span>
+                    <span className="strong" style={{ color }}>
+                      {pct(premium)}
+                    </span>
+                  </div>
+                  <div className="track">
+                    <div style={{ width: `${Math.max(1.5, symlog(Math.max(0, premium)) * 100)}%`, background: color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {answer && (
+        <section className="wrap split">
+          <div className="arrive" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+            <h2 className="display">Bots can ask too.</h2>
+            <p className="lede">
+              A trading bot asks where a stock is cheapest at its size and pays 25 cents in any token, from any chain,
+              settled through NEAR Intents.
+            </p>
+          </div>
+          <div className="ask arrive">
+            <div>
+              <small>The bot asks</small>
+              <span>Where is {answer.ticker} cheapest for a $10,000 buy?</span>
+            </div>
+            <div>
+              <small>It pays</small>
+              <span>0.25 USDC, from any chain, through NEAR Intents</span>
+            </div>
+            <div>
+              <small>Assayer answers</small>
+              <span className="gold">
+                {answer.venue}, {pct(answer.over_nasdaq_pct)} over Nasdaq
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="closing">
+        <div className="wrap closing-inner arrive">
+          <h2 className="display">See every price, live.</h2>
+          <Link href="/dashboard" className="pill pill-gold pill-big">
+            Open the dashboard
+          </Link>
+        </div>
+        <footer className="wrap footer">
+          <span>Assayer, built at NEAR HACKATHON, November 2026</span>
+          <span>Prices from Finnhub, Jupiter and KyberSwap</span>
+        </footer>
+      </section>
+    </main>
+  );
+}
