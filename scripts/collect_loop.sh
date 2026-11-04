@@ -12,6 +12,7 @@ deadline=$(( $(date +%s) + LOOP_MINUTES * 60 ))
 
 archive_round() {
   python -m assayer.archive data/local archive || return 1
+  python -m assayer.site_export archive || echo "round: site export failed"
   (
     cd archive
     git add -A
