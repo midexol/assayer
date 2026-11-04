@@ -53,7 +53,7 @@ export default async function Landing() {
         <div className="head-row arrive">
           <h2 className="display">One stock. Many prices.</h2>
           <p className="lede">
-            Nvidia, Tesla and Apple now trade as tokens on Solana, Ethereum and BNB Chain. The same share does not cost
+            Nvidia, Tesla and Apple now trade as tokens on Solana, Ethereum, BNB Chain and crypto exchanges. The same share does not cost
             the same everywhere.
           </p>
         </div>
@@ -194,7 +194,7 @@ export default async function Landing() {
         </div>
         <footer className="wrap footer">
           <span>Assayer, built at NEAR HACKATHON, November 2026</span>
-          <span>Prices from Finnhub, Jupiter and KyberSwap</span>
+          <span>Prices from Finnhub, Jupiter, KyberSwap and Gate.io</span>
         </footer>
       </section>
     </main>

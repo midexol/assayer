@@ -69,7 +69,7 @@ def build(snapshots: list[dict], references: list[dict]) -> dict:
         venue_id = f"{s['chain']}:{s['symbol']}"
         venue = stock["venues"].setdefault(venue_id, {
             "id": venue_id, "symbol": s["symbol"], "chain": s["chain"],
-            "issuer": issuer_of.get((s["chain"], s["symbol"]), ""),
+            "issuer": issuer_of.get((s["chain"], s["symbol"])) or ("xStocks" if s["symbol"].endswith("x") else "Ondo"),
             "a": [None] * len(rounds), "b": [None] * len(rounds), "ap": None, "bp": None,
         })
         size = SIZES[s["size_usd"]]

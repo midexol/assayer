@@ -27,8 +27,8 @@ This section is updated as work lands. Anything not marked built is not claimed.
 | On-chain quote collector ($1K and $10K buy and sell: Jupiter on Solana, KyberSwap on Ethereum and BNB) | built, tested offline | [`assayer/collect/quotes.py`](assayer/collect/quotes.py), [`tests/test_quotes.py`](tests/test_quotes.py) |
 | Collection every 5 minutes, archived to the `data` branch | built | [`.github/workflows/collect.yml`](.github/workflows/collect.yml), [`scripts/collect_loop.sh`](scripts/collect_loop.sh), [`assayer/archive.py`](assayer/archive.py) |
 | Database schema | built | [`sql/schema.sql`](sql/schema.sql) |
-| Centralized-exchange order-book collector | planned | |
-| Fragmentation Tax and router-savings simulation | planned | |
+| Exchange collector: walks the Gate.io order book for all five xStocks at $1K and $10K | built, tested | [`assayer/collect/cex.py`](assayer/collect/cex.py), [`tests/test_cex.py`](tests/test_cex.py) |
+| Cost of the split: Fragmentation Tax, router savings, gap lifespan, round-trip cost, market-open rounds only | built, tested; recomputed every round | [`assayer/thesis.py`](assayer/thesis.py), [`tests/test_thesis.py`](tests/test_thesis.py) |
 | Website: landing page and live dashboard (Overview, Venues, Alerts, Agent API) in Next.js | built, tested | [`web/`](web/), [`assayer/site_export.py`](assayer/site_export.py) |
 | Agent API: pay 0.25 USDC from any chain through NEAR Intents 1Click (402, deposit address, settlement check), answer with a reason from NEAR AI Cloud | built, tested with the network faked; first live payment pending keys | [`web/lib/payment.ts`](web/lib/payment.ts), [`web/lib/reason.ts`](web/lib/reason.ts), [`web/app/api/v1/best-venue`](web/app/api/v1/best-venue), [`web/README.md`](web/README.md#api) |
 

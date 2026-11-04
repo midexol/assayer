@@ -70,6 +70,6 @@ export const dollars = (points: number | null, sizeUsd: number) =>
 export function venueLabel(id: string | null): string {
   if (!id) return "None";
   const [chain, symbol] = id.split(":");
-  const names: Record<string, string> = { solana: "Solana", ethereum: "Ethereum", bsc: "BNB Chain" };
+  const names: Record<string, string> = { solana: "Solana", ethereum: "Ethereum", bsc: "BNB Chain", gate: "Gate.io" };
   return `${symbol} on ${names[chain] ?? chain}`;
 }

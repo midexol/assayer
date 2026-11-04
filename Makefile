@@ -14,6 +14,7 @@ demo:
 collect:
 	python -m assayer.collect.reference
 	python -m assayer.collect.quotes
+	python -m assayer.collect.cex
 
 # Thesis charts and numbers. Built from day 7 onward.
 report:

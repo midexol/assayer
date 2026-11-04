@@ -36,6 +36,7 @@ export const CHAIN_NAMES: Record<string, string> = {
   solana: "Solana",
   ethereum: "Ethereum",
   bsc: "BNB Chain",
+  gate: "Gate.io",
 };
 
 // One column per issuer + chain, in a fixed order, with a fixed colour.
@@ -44,6 +45,7 @@ export const COLUMNS = [
   { key: "Ondo:ethereum", label: "Ondo on Ethereum", color: "#7FA7D6" },
   { key: "Ondo:bsc", label: "Ondo on BNB Chain", color: "#B9A6E8" },
   { key: "Ondo:solana", label: "Ondo on Solana", color: "#E58363" },
+  { key: "xStocks:gate", label: "xStocks on Gate.io", color: "#8FB8A8" },
 ] as const;
 
 export const columnOf = (v: Venue) => `${v.issuer}:${v.chain}`;

@@ -27,6 +27,7 @@ while [ "$(date +%s)" -lt "$deadline" ]; do
   started=$(date +%s)
   python -m assayer.collect.reference || echo "round: reference collector failed"
   python -m assayer.collect.quotes    || echo "round: quote collector failed"
+  python -m assayer.collect.cex       || echo "round: exchange collector failed"
   archive_round                       || echo "round: archive push failed"
 
   next=$(( (started / INTERVAL + 1) * INTERVAL ))

@@ -171,7 +171,7 @@ export function Dashboard({ initial, initialThesis }: { initial: Data; initialTh
           {view === "agent" && <Agent ticker={ticker} size={size} />}
 
           <footer className="dash-foot">
-            <span>Prices from Finnhub (Nasdaq), Jupiter (Solana) and KyberSwap (Ethereum, BNB Chain). Stablecoins counted at $1.</span>
+            <span>Prices from Finnhub (Nasdaq), Jupiter (Solana), KyberSwap (Ethereum, BNB Chain) and the Gate.io order book. Stablecoins counted at $1.</span>
             <a href={RAW_URL}>Raw rounds on GitHub</a>
           </footer>
         </main>
