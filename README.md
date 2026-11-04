@@ -2,6 +2,8 @@
 
 Assayer measures how far tokenized US stocks (Ondo `…on` tokens and xStocks `…x` tokens) drift from the real Nasdaq price across Solana, Ethereum, BNB Chain and centralized exchanges, and what that drift costs traders. Built at NEAR HACKATHON (Nov 1 to 14, 2026).
 
+**Other project by the same entrant:** [Lifeboat](https://github.com/midexol/lifeboat), a quantum-attack rescue for Bitcoin, Ethereum, BNB Chain and NEAR wallets. The two projects are independent and share no code.
+
 ## Try it
 
 ```sh
