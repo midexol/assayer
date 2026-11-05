@@ -43,7 +43,13 @@ export default async function Landing() {
           </header>
           <div className="hero-center">
             <h1 className="wordmark">ASSAYER</h1>
-            <p className="hero-line">The fair price of tokenized stocks, tested across every chain.</p>
+            <p className="hero-line">
+              Tokenized stocks like Nvidia and Tesla trade on Solana, Ethereum, BNB Chain and Gate.io, and the price differs on each.
+              Assayer checks every venue against Nasdaq every five minutes and shows where each stock is cheapest to buy.
+            </p>
+            <Link href="/dashboard" className="pill pill-gold pill-big">
+              See today&apos;s prices
+            </Link>
           </div>
           <div className="hero-foot">Scroll</div>
         </div>
