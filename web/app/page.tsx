@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { bestVenue, isDear, pct, ranked, symlog, updatedLabel, venueName, money } from "@/lib/assay";
 import { loadDashboard } from "@/lib/data";
-import { dollars, loadThesis, venueLabel } from "@/lib/thesis";
+import { dollars, loadThesis, thinVenueIds, venueLabel } from "@/lib/thesis";
 
 export const revalidate = 300;
 
@@ -16,17 +16,26 @@ export default async function Landing() {
   const bestNvda = thesis.stocks.NVDA?.["10000"].usable_venues.best_static_venue ?? null;
   const tickers = Object.keys(d.stocks);
 
+  // Thin pools (median more than thin_points off Nasdaq) are real prices but
+  // not real markets, so they never headline the landing page.
+  const thinIds = (t: string) => thinVenueIds(thesis, t);
+  const usableRanked = (t: string, size: "a" | "b") => {
+    const thin = thinIds(t);
+    return ranked(d.stocks[t], size).filter((x) => !thin.has(x.venue.id));
+  };
+  const thinCount = tickers.reduce((n, t) => n + thinIds(t).size, 0);
+
   const rows = tickers
-    .map((t) => ({ t, stock: d.stocks[t], r: ranked(d.stocks[t], "a") }))
+    .map((t) => ({ t, stock: d.stocks[t], r: usableRanked(t, "a") }))
     .filter((x) => x.r.length > 0);
 
   // The stock with the widest $10,000 spread makes the clearest example.
   const example =
     tickers
-      .map((t) => ({ t, r: ranked(d.stocks[t], "b") }))
+      .map((t) => ({ t, r: usableRanked(t, "b") }))
       .filter((x) => x.r.length > 1)
       .sort((x, y) => y.r[y.r.length - 1].premium - y.r[0].premium - (x.r[x.r.length - 1].premium - x.r[0].premium))[0] ?? null;
-  const answer = example ? bestVenue(d, example.t, "b") : null;
+  const answer = example ? bestVenue(d, example.t, "b", thinIds(example.t)) : null;
 
   return (
     <main>
@@ -76,13 +85,13 @@ export default async function Landing() {
                   </span>
                 </div>
                 <div className="cell">
-                  <small>Closest token</small>
+                  <small>Cheapest venue</small>
                   <span>
                     <span className="gold strong">{pct(lo.premium)}</span> {venueName(lo.venue)}
                   </span>
                 </div>
                 <div className="cell">
-                  <small>Dearest token</small>
+                  <small>Most expensive venue</small>
                   <span>
                     <span className={isDear(hi.premium) ? "coral strong" : "gold strong"}>{pct(hi.premium)}</span>{" "}
                     {venueName(hi.venue)}
@@ -95,6 +104,7 @@ export default async function Landing() {
         <p className="note arrive">
           Real $1,000 buys compared with Nasdaq, collection round of {updatedLabel(d)}
           {d.market_open ? "." : ". Nasdaq was closed, so its last price is the reference."}
+          {thinCount > 0 && ` ${thinCount} thin pools, whose median price is over ${thesis.thin_points}% from Nasdaq, are left out here and listed on the dashboard.`}
         </p>
       </section>
 

@@ -73,3 +73,10 @@ export function venueLabel(id: string | null): string {
   const names: Record<string, string> = { solana: "Solana", ethereum: "Ethereum", bsc: "BNB Chain", gate: "Gate.io" };
   return `${symbol} on ${names[chain] ?? chain}`;
 }
+
+/** Venue ids for one ticker whose median price is far from Nasdaq at either size. */
+export function thinVenueIds(thesis: Thesis, ticker: string): Set<string> {
+  const stock = thesis.stocks[ticker];
+  if (!stock) return new Set();
+  return new Set((["1000", "10000"] as const).flatMap((k) => stock[k].venues.filter((v) => v.thin).map((v) => v.id)));
+}

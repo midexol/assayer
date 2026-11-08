@@ -49,4 +49,11 @@ describe("assay helpers", () => {
     expect(ans?.price).toBe(201);
     expect(bestVenue(d, "MSFT", "a")).toBeNull();
   });
+
+  it("skips thin pools when asked", () => {
+    const first = bestVenue(d, "NVDA", "a")!;
+    const skipped = bestVenue(d, "NVDA", "a", new Set([`${d.stocks.NVDA.venues.find((v) => v.symbol === "NVDAx")!.id}`]));
+    expect(skipped?.venue).not.toBe(first.venue);
+    expect(bestVenue(d, "NVDA", "a", new Set(d.stocks.NVDA.venues.map((v) => v.id)))).toBeNull();
+  });
 });

@@ -102,10 +102,10 @@ export function updatedLabel(d: Dashboard): string {
 }
 
 /** The answer the Agent API sells: the cheapest venue for a ticker and size. */
-export function bestVenue(d: Dashboard, ticker: string, size: Size) {
+export function bestVenue(d: Dashboard, ticker: string, size: Size, skip: ReadonlySet<string> = new Set()) {
   const stock = d.stocks[ticker];
   if (!stock) return null;
-  const r = ranked(stock, size);
+  const r = ranked(stock, size).filter((x) => !skip.has(x.venue.id));
   if (!r.length) return null;
   const { venue, premium } = r[0];
   return {

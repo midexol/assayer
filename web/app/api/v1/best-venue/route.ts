@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { bestVenue, chainName, ranked, type Size } from "@/lib/assay";
 import { loadDashboard } from "@/lib/data";
+import { loadThesis, thinVenueIds } from "@/lib/thesis";
 import { checkSettlement, createInvoice, payConfig, readToken, type PayWith } from "@/lib/payment";
 import { aiReason, plainReason } from "@/lib/reason";
 
@@ -45,9 +46,11 @@ export async function POST(req: Request) {
 
   const data = await loadDashboard();
   if (!data.stocks[ticker]) return bad(`Unknown ticker. Try one of: ${Object.keys(data.stocks).join(", ")}.`, 404);
-  const answer = bestVenue(data, ticker, size);
+  const thin = thinVenueIds(await loadThesis(), ticker);
+  const answer = bestVenue(data, ticker, size, thin);
   if (!answer) return bad(`No venue priced ${ticker} in the latest round.`, 503);
   const others = ranked(data.stocks[ticker], size)
+    .filter((r) => !thin.has(r.venue.id))
     .slice(1)
     .map((r) => ({ venue: `${r.venue.symbol} on ${chainName(r.venue.chain)}`, over_nasdaq_pct: r.premium }));
   const question = { ticker, size_usd: body.size_usd as number };
