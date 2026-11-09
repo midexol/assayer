@@ -6,7 +6,7 @@ import { pct, type bestVenue } from "./assay";
 type Answer = NonNullable<ReturnType<typeof bestVenue>>;
 
 export const NEARAI_URL = "https://cloud-api.near.ai/v1/chat/completions";
-export const DEFAULT_MODEL = "zai-org/GLM-5.1-FP8";
+export const DEFAULT_MODEL = "z-ai/glm-5.3-flash";
 
 export function plainReason(a: Answer, runnerUp?: { venue: string; over_nasdaq_pct: number }): string {
   const base = `${a.venue} was the cheapest place to buy $${a.size_usd.toLocaleString("en-US")}, at ${pct(a.over_nasdaq_pct)} against Nasdaq`;

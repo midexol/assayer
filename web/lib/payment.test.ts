@@ -101,7 +101,7 @@ describe("reason", () => {
     }) as unknown as typeof fetch;
     const r = await aiReason(a, others, { NEARAI_API_KEY: "k" }, f);
     expect(auth).toBe("Bearer k");
-    expect(r).toEqual({ text: "Solana's NVDAx is closest.", source: "near-ai-cloud", model: "zai-org/GLM-5.1-FP8" });
+    expect(r).toEqual({ text: "Solana's NVDAx is closest.", source: "near-ai-cloud", model: "z-ai/glm-5.3-flash" });
   });
 
   it("falls back when NEAR AI Cloud fails", async () => {
