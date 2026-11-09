@@ -472,6 +472,8 @@ function Alerts({ data, size }: { data: Data; size: Size }) {
   const [form, setForm] = useState({ ticker: tickers[0] ?? "NVDA", threshold: "1" });
   const [error, setError] = useState("");
 
+  // Browser storage is read after hydration, so the server and the first client render match.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setAlerts(readAlerts()), []);
   const save = (next: Alert[]) => {
     setAlerts(next);
@@ -545,16 +547,19 @@ function Alerts({ data, size }: { data: Data; size: Size }) {
 }
 
 function Agent({ ticker, size }: { ticker: string; size: Size }) {
-  const [step, setStep] = useState(0);
-  const [body, setBody] = useState("");
-  const [busy, setBusy] = useState(false);
   const request = { ticker, side: "buy", size_usd: SIZES[size].usd };
+  const blank = `POST /api/v1/best-venue\n\n${JSON.stringify(request, null, 2)}`;
+  const [step, setStep] = useState(0);
+  const [body, setBody] = useState(blank);
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
+  // A new ticker or size starts the walkthrough again (adjusted during render, not in an effect).
+  const [shownFor, setShownFor] = useState(`${ticker}|${size}`);
+  if (shownFor !== `${ticker}|${size}`) {
+    setShownFor(`${ticker}|${size}`);
     setStep(0);
-    setBody(`POST /api/v1/best-venue\n\n${JSON.stringify(request, null, 2)}`);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticker, size]);
+    setBody(blank);
+  }
 
   const call = async (preview: boolean) => {
     setBusy(true);

@@ -1,0 +1,22 @@
+name: Tag
+
+# Marks the submitted code with a tag, e.g. hackathon-submission. Moves the tag if it exists.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name"
+        default: hackathon-submission
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          git tag -f "${{ inputs.tag }}"
+          git push -f origin "refs/tags/${{ inputs.tag }}"
+          echo "Tagged $(git rev-parse --short HEAD) as ${{ inputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
