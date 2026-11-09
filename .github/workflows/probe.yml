@@ -4,6 +4,10 @@ name: Probe price APIs
 on:
   workflow_dispatch:
 
+# Least privilege: these jobs only read the repository.
+permissions:
+  contents: read
+
 jobs:
   probe:
     runs-on: ubuntu-latest
