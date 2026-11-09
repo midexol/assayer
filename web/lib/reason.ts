@@ -1,3 +1,4 @@
+import "server-only";
 // A one-line reason for the Agent API's answer, written by a model on NEAR AI Cloud
 // (OpenAI-compatible, https://docs.near.ai/cloud/quickstart). Falls back to a plain
 // sentence built from the numbers when no key is set or the call fails.

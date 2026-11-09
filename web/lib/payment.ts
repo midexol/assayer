@@ -1,3 +1,4 @@
+import "server-only";
 // Pay-per-answer through NEAR Intents 1Click (https://docs.near-intents.org).
 //
 // 1. A bot asks without paying, naming the token it wants to pay with and a refund address.
