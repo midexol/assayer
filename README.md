@@ -19,7 +19,7 @@ Assayer measures how far tokenized US stocks (Ondo `â€¦on` tokens and xStocks `â
   - It sells the answer to trading bots for 0.25 USDC, paid from any chain through NEAR Intents.
 - **How NEAR fits.**
   - **Payment:** bots pay per answer through NEAR Intents 1Click, in any token on any chain.
-  - **Explanation:** each paid answer comes with a reason written on NEAR AI Cloud.
+  - **Explanation:** each paid answer comes with a reason. It is a plain sentence built from the numbers; if a NEAR AI Cloud key is set, a model on NEAR AI Cloud writes it instead (optional, off in the live demo).
   - **The thesis below:** fragmentation across chains is the cost that chain-abstracted routing exists to remove.
 
 Tracks: `thesis`, `agents`, `open`.
@@ -87,7 +87,7 @@ This section is updated as work lands. Anything not marked built is not claimed.
 | Cost of the split: Fragmentation Tax, router savings, gap lifespan, round-trip cost, market-open rounds only | built, tested; recomputed every round | [`assayer/thesis.py`](assayer/thesis.py), [`tests/test_thesis.py`](tests/test_thesis.py) |
 | Website: landing page and live dashboard (Overview, Venues, Alerts, Agent API) in Next.js | built, tested, [live](https://assayer-gray.vercel.app) | [`web/`](web/), [`assayer/site_export.py`](assayer/site_export.py) |
 | Security: per-visitor rate limits, body caps, strict headers, secrets kept server-side | built, tested; checked live | [`web/proxy.ts`](web/proxy.ts), [`web/next.config.ts`](web/next.config.ts) |
-| Agent API: pay 0.25 USDC from any chain through NEAR Intents 1Click (402, deposit address, settlement check), answer with a reason from NEAR AI Cloud | built, tested with the network faked; first live payment pending keys | [`web/lib/payment.ts`](web/lib/payment.ts), [`web/lib/reason.ts`](web/lib/reason.ts), [`web/app/api/v1/best-venue`](web/app/api/v1/best-venue), [`web/README.md`](web/README.md#api) |
+| Agent API: pay 0.25 USDC from any chain through NEAR Intents 1Click (402, deposit address, settlement check), answer with a reason (plain sentence, or NEAR AI Cloud when a key is set) | built, tested with the network faked; first live payment pending keys | [`web/lib/payment.ts`](web/lib/payment.ts), [`web/lib/reason.ts`](web/lib/reason.ts), [`web/app/api/v1/best-venue`](web/app/api/v1/best-venue), [`web/README.md`](web/README.md#api) |
 
 ## Security
 
@@ -141,7 +141,7 @@ Everything in this repository was written during NEAR HACKATHON (1 to 14 Novembe
 
 **Libraries:** Python: `requests`, optional `psycopg`, and pytest for tests. Website: Next.js, React and `server-only`, with Vitest and ESLint for tests and linting.
 
-**Services:** Finnhub (Nasdaq prices and market status), Jupiter (Solana quotes), KyberSwap (Ethereum and BNB Chain quotes), the Gate.io public order book, NEAR Intents 1Click (payments), NEAR AI Cloud (the written reasons), GitHub Actions (collection) and Google Fonts (type).
+**Services:** Finnhub (Nasdaq prices and market status), Jupiter (Solana quotes), KyberSwap (Ethereum and BNB Chain quotes), the Gate.io public order book, NEAR Intents 1Click (payments), NEAR AI Cloud (optional written reasons, off in the live demo), GitHub Actions (collection) and Google Fonts (type).
 
 **AI-generated code:** much of the code, tests and documentation was written with Claude, Anthropic's AI assistant, working under the entrant's direction. The entrant chose the product, the thesis and every trade-off, and reviewed and tested the result.
 
