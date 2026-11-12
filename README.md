@@ -4,7 +4,7 @@ Assayer measures how far tokenized US stocks (Ondo `…on` tokens and xStocks `�
 
 **Live:** [assayer-gray.vercel.app](https://assayer-gray.vercel.app) (landing page and [dashboard](https://assayer-gray.vercel.app/dashboard)) · **Code:** [github.com/midexol/assayer](https://github.com/midexol/assayer)
 
-**Other project by the same entrant:** [Asylia](https://github.com/midexol/asylia), a quantum-attack rescue for Bitcoin, Ethereum, BNB Chain and NEAR wallets. The two projects are independent and share no code.
+**Other project by the same entrant:** Asylia (a separate repository), a quantum-attack rescue for Bitcoin, Ethereum, BNB Chain and NEAR wallets. The two projects are independent and share no code.
 
 ## What it is, in one minute
 
