@@ -1,0 +1,2 @@
+{"ts": "2026-11-18T04:50:32.377036+00:00", "source": "quotes", "venue_id": "ethereum:TSLAon", "error": "QuoteError: https://ethereum-rpc.publicnode.com: failed after 3 retries: HTTPSConnectionPool(host='ethereum-rpc.publicnode.com', port=443): Read timed out. (read timeout=20)"}
+{"ts": "2026-11-18T04:50:32.377036+00:00", "source": "quotes", "venue_id": "ethereum:AAPLon", "error": "QuoteError: https://ethereum-rpc.publicnode.com: failed after 3 retries: HTTPSConnectionPool(host='ethereum-rpc.publicnode.com', port=443): Read timed out. (read timeout=20)"}
