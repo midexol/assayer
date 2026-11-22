@@ -1,2 +1,3 @@
 {"ts": "2026-11-22T12:22:27.792087+00:00", "source": "cex", "venue_id": "gate:TSLAx", "error": "BookTooThin: bids hold only 21.6260 of 27.7442 shares"}
 {"ts": "2026-11-22T21:16:54.312888+00:00", "source": "cex", "venue_id": "gate:TSLAx", "error": "BookTooThin: bids hold only 15.3180 of 27.7474 shares"}
+{"ts": "2026-11-22T21:21:56.013318+00:00", "source": "cex", "venue_id": "gate:TSLAx", "error": "BookTooThin: bids hold only 15.3270 of 27.7519 shares"}
