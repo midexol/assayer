@@ -94,3 +94,4 @@
 {"ts": "2026-11-24T07:45:01.311305+00:00", "source": "quotes", "venue_id": "solana:TSLAon", "error": "QuoteError: Jupiter returned no route: No routes found"}
 {"ts": "2026-11-24T07:50:01.605994+00:00", "source": "quotes", "venue_id": "solana:TSLAon", "error": "QuoteError: Jupiter returned no route: No routes found"}
 {"ts": "2026-11-24T07:55:01.408474+00:00", "source": "quotes", "venue_id": "solana:TSLAon", "error": "QuoteError: Jupiter returned no route: No routes found"}
+{"ts": "2026-11-24T08:00:00.785928+00:00", "source": "quotes", "venue_id": "solana:TSLAon", "error": "QuoteError: Jupiter returned no route: No routes found"}
