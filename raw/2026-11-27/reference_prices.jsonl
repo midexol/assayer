@@ -1148,3 +1148,8 @@
 {"ts": "2026-11-27T19:05:00.998474+00:00", "ticker": "QQQ", "price": 651.03, "quote_ts": "2026-11-27T19:04:44+00:00", "market_open": true, "source": "finnhub"}
 {"ts": "2026-11-27T19:05:00.998474+00:00", "ticker": "SPY", "price": 728.36, "quote_ts": "2026-11-27T19:04:27+00:00", "market_open": true, "source": "finnhub"}
 {"ts": "2026-11-27T19:05:00.998474+00:00", "ticker": "TSLA", "price": 400.04, "quote_ts": "2026-11-27T19:04:33+00:00", "market_open": true, "source": "finnhub"}
+{"ts": "2026-11-27T19:10:00.910842+00:00", "ticker": "AAPL", "price": 358.58, "quote_ts": "2026-11-27T19:09:09+00:00", "market_open": true, "source": "finnhub"}
+{"ts": "2026-11-27T19:10:00.910842+00:00", "ticker": "NVDA", "price": 150.52, "quote_ts": "2026-11-27T19:09:37+00:00", "market_open": true, "source": "finnhub"}
+{"ts": "2026-11-27T19:10:00.910842+00:00", "ticker": "QQQ", "price": 651.03, "quote_ts": "2026-11-27T19:09:24+00:00", "market_open": true, "source": "finnhub"}
+{"ts": "2026-11-27T19:10:00.910842+00:00", "ticker": "SPY", "price": 728.36, "quote_ts": "2026-11-27T19:09:30+00:00", "market_open": true, "source": "finnhub"}
+{"ts": "2026-11-27T19:10:00.910842+00:00", "ticker": "TSLA", "price": 400.04, "quote_ts": "2026-11-27T19:09:36+00:00", "market_open": true, "source": "finnhub"}
